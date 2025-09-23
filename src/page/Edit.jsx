@@ -1,8 +1,38 @@
 import { Link } from "react-router";
 import Button from "../components/ui/Button";
 import Input from "../components/ui/Input";
+import z from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+
+const EditSchema = z.object({
+  name: z
+    .string()
+    .regex(
+      /^[A-Z][a-z]+(?:\s[A-Z][a-z]+){2}$/,
+      "Name must have three words, each starting with a capital letter"
+    ),
+  code: z
+    .number()
+    .min(100000, "Code must be at least 6 digits")
+    .max(999999, "Code must be at most 6 digits"),
+  email: z.string().email(),
+  grade: z.number().min(1).max(6),
+});
 
 const Edit = () => {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm({
+    resolver: zodResolver(EditSchema),
+  });
+
+  const onSubmit = (data) => {
+    console.log(data);
+  };
+
   return (
     <div className="relative min-h-screen bg-gradient-to-br from-indigo-50 via-white to-fuchsia-50 overflow-hidden">
       <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
@@ -20,40 +50,44 @@ const Edit = () => {
               Update the details for the student.
             </p>
 
-            <form className="mt-8 space-y-6">
+            <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
               <Input
+                {...register("name")}
                 label="Full Name"
                 type="text"
                 id="name"
                 name="name"
                 placeholder="e.g., John Doe"
-                required
+                error={errors.name?.message}
               />
               <Input
+                {...register("code", { valueAsNumber: true })}
                 label="Student Code"
                 type="text"
                 id="code"
                 name="code"
                 placeholder="e.g., 210001"
-                required
+                error={errors.code?.message}
               />
               <Input
+                {...register("email")}
                 label="Email Address"
                 type="email"
                 id="email"
                 name="email"
                 placeholder="e.g., john.doe@example.com"
-                required
+                error={errors.email?.message}
               />
               <Input
+                {...register("grade", { valueAsNumber: true })}
                 label="Grade"
                 type="number"
                 id="grade"
                 name="grade"
                 placeholder="e.g., 4"
                 min="1"
-                max="12"
-                required
+                max="6"
+                error={errors.grade?.message}
               />
 
               <div className="flex justify-end gap-3 pt-2">

@@ -1,10 +1,11 @@
+import { Toaster } from "react-hot-toast";
 import Layout from "./components/Layout";
-import UserTable from "./components/UserTable";
 
 function App() {
   return (
     <>
       <Layout />
+      <Toaster />
     </>
   );
 }
