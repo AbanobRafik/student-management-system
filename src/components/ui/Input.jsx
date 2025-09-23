@@ -10,7 +10,7 @@ const Input = ({ label, type, id, name, error, ...rest }) => {
         id={id}
         name={name}
         // highlight border red when there's an error
-        className={`border p-2 rounded-md w-full focus:outline-none focus:ring-2 ${
+        className={`border p-2 rounded-md w-full focus:outline-none focus:ring-2 disabled:bg-gray-400 disabled:cursor-not-allowed disabled:text-amber-50  ${
           error
             ? "border-red-500 focus:ring-red-400"
             : "border-gray-300 focus:ring-indigo-500"

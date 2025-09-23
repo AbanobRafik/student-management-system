@@ -11,7 +11,7 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <UserTable /> },
       { path: "add", element: <Add /> },
-      { path: "edit", element: <Edit /> },
+      { path: "edit/:code", element: <Edit /> },
     ],
   },
 ]);

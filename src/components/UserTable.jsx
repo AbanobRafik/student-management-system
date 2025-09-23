@@ -98,7 +98,7 @@ const UserTable = () => {
                   </td>
                   <td className="py-3 px-4 sm:py-4 sm:px-6 space-x-2">
                     <div className="flex md:gap-3 gap:2 justify-center items-center">
-                      <Link to="/edit">
+                      <Link to={`/edit/${student.code}`}>
                         <Button variant="warning" size="sm">
                           Edit
                         </Button>

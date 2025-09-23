@@ -1,9 +1,12 @@
-import { Link } from "react-router";
+import { Link, useNavigate, useParams } from "react-router";
 import Button from "../components/ui/Button";
 import Input from "../components/ui/Input";
 import z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
+import { useEffect, useState } from "react";
+import axios from "axios";
+import toast from "react-hot-toast";
 
 const EditSchema = z.object({
   name: z
@@ -12,10 +15,7 @@ const EditSchema = z.object({
       /^[A-Z][a-z]+(?:\s[A-Z][a-z]+){2}$/,
       "Name must have three words, each starting with a capital letter"
     ),
-  code: z
-    .number()
-    .min(100000, "Code must be at least 6 digits")
-    .max(999999, "Code must be at most 6 digits"),
+  code: z.number().min(100000).max(999999),
   email: z.string().email(),
   grade: z.number().min(1).max(6),
 });
@@ -25,13 +25,73 @@ const Edit = () => {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm({
-    resolver: zodResolver(EditSchema),
-  });
+    reset,
+  } = useForm({ resolver: zodResolver(EditSchema) });
 
-  const onSubmit = (data) => {
-    console.log(data);
+  const { code } = useParams();
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const Navigate = useNavigate();
+
+  // Load current student data
+  useEffect(() => {
+    const loadStudentData = async () => {
+      try {
+        const { data } = await axios.get(
+          `https://student-management-rho.vercel.app/api/student/${code}`
+        );
+        reset({
+          name: data.name,
+          code: data.code,
+          email: data.email,
+          grade: data.grade,
+        });
+      } catch (err) {
+        toast.error("Failed to load student data");
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadStudentData();
+  }, [code, reset]);
+
+  const onSubmit = async (data) => {
+    console.log("Submitting", data);
+    try {
+      setSaving(true);
+      const response = await axios.put(
+        `https://student-management-rho.vercel.app/api/update/student/${code}`,
+        {
+          ...data,
+          code: Number(data.code),
+          grade: Number(data.grade),
+        }
+      );
+      if (response.status === 200) {
+        toast.success("Student updated successfully!", {
+          position: "top-center",
+        });
+      }
+      Navigate("/");
+    } catch (error) {
+      console.error(error);
+      toast.error(error.response?.data?.message || "Failed to add student", {
+        position: "top-right",
+        style: { background: "#333", color: "#fff" },
+      });
+    } finally {
+      setSaving(false);
+    }
   };
+
+  // Show a loader while fetching data
+  if (loading) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <p className="text-lg text-gray-600">Loading student data…</p>
+      </div>
+    );
+  }
 
   return (
     <div className="relative min-h-screen bg-gradient-to-br from-indigo-50 via-white to-fuchsia-50 overflow-hidden">
@@ -55,36 +115,25 @@ const Edit = () => {
                 {...register("name")}
                 label="Full Name"
                 type="text"
-                id="name"
-                name="name"
-                placeholder="e.g., John Doe"
                 error={errors.name?.message}
               />
               <Input
                 {...register("code", { valueAsNumber: true })}
                 label="Student Code"
                 type="text"
-                id="code"
-                name="code"
-                placeholder="e.g., 210001"
                 error={errors.code?.message}
+                disabled
               />
               <Input
                 {...register("email")}
                 label="Email Address"
                 type="email"
-                id="email"
-                name="email"
-                placeholder="e.g., john.doe@example.com"
                 error={errors.email?.message}
               />
               <Input
                 {...register("grade", { valueAsNumber: true })}
                 label="Grade"
                 type="number"
-                id="grade"
-                name="grade"
-                placeholder="e.g., 4"
                 min="1"
                 max="6"
                 error={errors.grade?.message}
@@ -92,19 +141,16 @@ const Edit = () => {
 
               <div className="flex justify-end gap-3 pt-2">
                 <Link to="/">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="px-6 py-2 rounded-xl transition active:scale-95"
-                  >
+                  <Button type="button" variant="outline" disabled={saving}>
                     Cancel
                   </Button>
                 </Link>
                 <Button
                   type="submit"
                   className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-xl shadow-md transition active:scale-95"
+                  disabled={saving}
                 >
-                  Edit Student
+                  {saving ? "Saving..." : "Edit Student"}
                 </Button>
               </div>
             </form>
