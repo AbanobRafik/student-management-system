@@ -2,11 +2,16 @@ import { useState, useEffect } from "react";
 import Button from "./ui/Button";
 import { Link } from "react-router";
 import axios from "axios";
+import Modal from "./Modal";
+import toast from "react-hot-toast";
+import { Toaster } from "react-hot-toast";
 
 const UserTable = () => {
   const [students, setStudent] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [openModal, setOpenModal] = useState(false);
+  const [code, setCode] = useState(null);
 
   useEffect(() => {
     const loadStudents = async () => {
@@ -24,6 +29,24 @@ const UserTable = () => {
     };
     loadStudents();
   }, []);
+
+  const deleteStudent = async (studentCode) => {
+    try {
+      const response = await axios.delete(
+        `https://student-management-rho.vercel.app/api/delete/student/${code}`
+      );
+      setStudent((std) =>
+        std.filter((student) => student.code !== studentCode)
+      );
+      if (response.status === 200) {
+        toast.success("Student deleted successfully!", {
+          position: "top-center",
+        });
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  };
 
   return (
     <section className="min-h-screen bg-gray-100 p-4 sm:p-8">
@@ -103,7 +126,14 @@ const UserTable = () => {
                           Edit
                         </Button>
                       </Link>
-                      <Button variant="danger" size="sm">
+                      <Button
+                        variant="danger"
+                        size="sm"
+                        onClick={() => {
+                          setCode(student.code);
+                          setOpenModal(true);
+                        }}
+                      >
                         Delete
                       </Button>
                     </div>
@@ -113,6 +143,15 @@ const UserTable = () => {
           </tbody>
         </table>
       </div>
+      <Modal
+        isOpen={openModal}
+        onClose={() => setOpenModal(false)}
+        onConfirm={() => {
+          deleteStudent(code);
+          setOpenModal(false);
+        }}
+      />
+      <Toaster />
     </section>
   );
 };

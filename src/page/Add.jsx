@@ -1,30 +1,14 @@
-import { Link, useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router"; // ✅ FIXED import
 import Input from "../components/ui/Input";
 import Button from "../components/ui/Button";
-import z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import axios from "axios";
 import toast, { Toaster } from "react-hot-toast";
-
-// ✅ Zod validation schema
-const StudentSchema = z.object({
-  name: z
-    .string()
-    .regex(
-      /^[A-Z][a-z]+(?:\s[A-Z][a-z]+){2}$/,
-      "Name must have three words, each starting with a capital letter"
-    ),
-  code: z
-    .number()
-    .min(100000, "Code must be at least 6 digits")
-    .max(999999, "Code must be at most 6 digits"),
-  email: z.string().email("Invalid email"),
-  grade: z.number().min(1, "Minimum grade is 1").max(6, "Maximum grade is 6"),
-});
+import { StudentSchema } from "../components/schema/StudentSchema";
 
 const Add = () => {
-  const navigate = useNavigate();
+  const Navigate = useNavigate();
 
   const {
     register,
@@ -36,31 +20,22 @@ const Add = () => {
   });
 
   const onSubmit = async (data) => {
-    const studentData = {
-      ...data,
-      code: Number(data.code),
-      grade: Number(data.grade),
-    };
-
     try {
       const response = await axios.post(
-        "https://student-management-rho.vercel.app/api/student", // ✅ confirm correct route
-        studentData
+        "https://student-management-rho.vercel.app/api/student",
+        { ...data, code: Number(data.code), grade: Number(data.grade) }
       );
-
-      if (response.status === 200) {
+      if (response.status >= 200 && response.status < 300) {
         toast.success("Student added successfully!", {
           position: "top-center",
+          duration: 2000,
         });
         reset();
-        navigate("/"); // redirect to home
+        Navigate("/");
       }
     } catch (error) {
       console.error(error);
-      toast.error(error.response?.data?.message || "Failed to add student", {
-        position: "top-right",
-        style: { background: "#333", color: "#fff" },
-      });
+      toast.error(error.response?.data?.message || "Failed to add student");
     }
   };
 
